@@ -30,8 +30,7 @@ behind them, kept honest by writing each entry at the moment the decision is mad
 
 ### C++23, not C++17
 
-The task document requires "C++17 or later"; this project targets **C++23** (`std::expected`,
-`std::ranges`). CI is pinned to toolchains recent enough to support it.
+The task document requires "C++17 or later"; this project targets **C++23**. CI is pinned to toolchains recent enough to support it.
 
 ### Compiler warnings: on, not fatal
 
