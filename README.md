@@ -1,7 +1,7 @@
 # RTS Battle Unit Path-Finding
 
 Software Candidate Assessment take-home project: path-finding for battle units on a
-grid-based battlefield, with a C++17 core and a Qt Quick (QML) user interface.
+grid-based battlefield, with a C++23 core and a Qt Quick (QML) user interface.
 
 Status: **work in progress.** This README grows alongside the code — each section below
 is filled in as the corresponding piece is built, not written up front. See
@@ -20,13 +20,58 @@ behind them, kept honest by writing each entry at the moment the decision is mad
 
 ## Project Structure
 
-*(filled in as each part lands)*
+```
+rts-pathfinder/
+├── CMakeLists.txt           # top-level build; RTS_BUILD_TESTS, RTS_BUILD_UI options
+├── core/                    # C++23 static library, no Qt dependency
+│   ├── include/rts/
+│   │   ├── battlefield.hpp  # Position, Terrain, Battlefield grid, neighbors4()
+│   │   ├── pathfinder.hpp   # findPathBfs()
+│   │   └── tilemap_json.hpp # TilemapDocument (RiskyLab JSON parse/export), MapError
+│   └── src/                 # implementations
+├── ui/                      # Qt Quick (QML) application -- the sole interaction surface
+│   ├── src/                 # MapModel, SolverController (the C++/QML bridge)
+│   └── qml/Main.qml
+├── tests/                   # doctest, one file per core module
+├── third_party/             # vendored: nlohmann/json, doctest
+└── samples/                 # four sample maps -- see Sample Runs
+```
 
 ## Build Instructions
 
-*(filled in once there is something to build)*
+Prerequisites: CMake ≥ 3.21 and a C++23 compiler (built with Apple Clang 17). Qt 6.5+
+(Core, Gui, Qml, Quick, QuickControls2, QuickDialogs2, QuickLayouts) is needed for the UI
+only -- the core library and tests build and run with no Qt installed at all.
+
+**Core + tests only:**
+
+```sh
+cmake -B build -DRTS_BUILD_UI=OFF
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+**Everything, including the UI:**
+
+```sh
+cmake -B build -DCMAKE_PREFIX_PATH=<path-to-qt>
+cmake --build build
+./build/ui/rts_ui
+```
+
+`<path-to-qt>` is the Qt installation root -- on macOS, e.g. `/opt/homebrew/opt/qt`
+(Homebrew) or `~/Qt/6.x.x/macos` (official installer). If Qt can't be found, the build
+prints a status message and continues without the `ui` target rather than failing.
 
 ## Design Decisions
+
+### AI assistance
+
+As a senior developer, I chose to build this project with AI assistance: I gave the
+model an initial BFS-based approach and my preferences on structure, tooling, and
+conventions, then evaluated and refined its suggestions from there. We worked out an
+execution plan together; the AI handled most of the implementation, and I reviewed every
+change before committing it.
 
 ### C++23, not C++17
 
@@ -44,7 +89,7 @@ elevated. A value outside that set — including a non-integer one — is not a 
 documented code, it's outside the format; the parser throws `MapError` naming the
 offending cell rather than guessing at undocumented meaning.
 
-The interviewer's own sample map doesn't conform to this: it has no plain `8`, and
+The sample map provided doesn't conform to this: it has no plain `8`, and
 carries `0.5`/`8.1` instead of documented codes. Rather than build tolerance into the
 parser to make that one file happen to parse, `samples/interviewer_sample.json` is kept
 as a negative test — proof the parser rejects it cleanly, with a clear, specific error —
@@ -56,6 +101,14 @@ solvable) is used everywhere a positive example is needed.
 The sample JSON has no `tileswide`/`tileshigh` fields (unlike typical RiskyLab exports).
 Dimensions are resolved as: explicit `tileswide`/`tileshigh` if present, else
 `canvas.width / tilesets[0].tilewidth` (and the equivalent for height), else a `MapError`.
+
+### UI: Minimal solving UI
+
+Load a map, solve, view the result — no in-app editing, export, or random-map controls.
+The grid renders as flat colored cells rather than RiskyLab's actual tileset: that site
+publishes no license for its tile images (a real redistribution risk in a public repo),
+and separately, its tileset renders a plain `0`/`8` as a fully transparent tile, which
+would make our own start/target invisible if used as-is.
 
 ## Third-Party Libraries
 
@@ -69,18 +122,75 @@ Dimensions are resolved as: explicit `tileswide`/`tileshigh` if present, else
   `third_party/doctest/`. Chosen over Catch2/GoogleTest for compile speed and
   zero-dependency, single-header integration.
 
+## Sample Runs
+
+### `samples/sample_map.json` — solved
+
+32×32, start `(0,0)`, target `(31,31)`. `findPathBfs` finds a 62-step path (63
+positions), and the UI highlights it on the grid while showing the same list as text:
+
+```
+(0,0) -> (0,1) -> (1,1) -> (1,2) -> (1,3) -> (1,4) -> (2,4) -> (3,4) -> (4,4) -> (5,4) ->
+(5,5) -> (5,6) -> (6,6) -> (7,6) -> (7,7) -> (7,8) -> (7,9) -> (7,10) -> (7,11) -> (8,11) ->
+(8,12) -> (8,13) -> (8,14) -> (8,15) -> (8,16) -> (8,17) -> (8,18) -> (8,19) -> (8,20) ->
+(8,21) -> (8,22) -> (8,23) -> (8,24) -> (8,25) -> (8,26) -> (8,27) -> (8,28) -> (9,28) ->
+(10,28) -> (11,28) -> (12,28) -> (13,28) -> (14,28) -> (15,28) -> (16,28) -> (16,29) ->
+(16,30) -> (17,30) -> (18,30) -> (19,30) -> (20,30) -> (21,30) -> (22,30) -> (23,30) ->
+(24,30) -> (24,31) -> (25,31) -> (26,31) -> (27,31) -> (28,31) -> (29,31) -> (30,31) -> (31,31)
+```
+
+![sample_map.json solved](samples/screenshots/sample_map_solved.png)
+
+### `samples/interviewer_sample.json` — rejected
+
+Loading this map fails with:
+
+```
+layers[0].data[286] at (8,30) has value 0.500000, which is not one of the
+documented codes -1, 0, 3, 8
+```
+
+surfaced in the UI as a status message rather than a crash. See
+[Design Decisions](#design-decisions) for why this map doesn't conform and is kept as a
+negative test rather than something the parser is bent to accept.
+
+![interviewer_sample.json rejected](samples/screenshots/interviewer_sample_rejected.png)
+
+### `samples/no_path_map.json` — no path exists
+
+5×5, start `(0,0)`, target `(4,4)`, with a solid elevated wall down column 2 fully
+separating them -- valid input, but algorithmically unsolvable. `findPathBfs` returns
+`std::nullopt`, and the UI reports "No path exists between start and target" rather than
+showing a stale or empty grid.
+
+![no_path_map.json result](samples/screenshots/no_path_map_result.png)
+
+### `samples/backtracking_maze.json` — dead-end recovery
+
+The exact 3×4 maze from `test_pathfinder.cpp`'s `"finds a path around a wall, recovering
+from the dead end it creates"` test, packaged as a map so the same scenario the test
+suite verifies is also visually demonstrable. Start `(0,0)`, target `(0,3)`, a two-cell
+wall directly blocks the straight route:
+
+```
+(0,0) -> (0,1) -> (1,1) -> (2,1) -> (2,2) -> (2,3) -> (1,3) -> (0,3)
+```
+
+7 steps (8 positions) -- BFS's frontier detours around the wall via row 2 without any
+explicit backtracking logic, which is what the task document's "must be capable of
+backtracking" requirement is checking for. Small enough to visually verify the path is
+genuinely shortest at a glance, unlike the 32×32 case above.
+
+![backtracking_maze.json solved](samples/screenshots/backtracking_maze_solved.png)
+
 ## AI Usage
 
 This project was built with Claude Code as a pair-programmer, under direct supervision:
-every design decision was discussed and argued before being adopted, every code change
-was reviewed and editable before being committed. That review caught and reversed a real
-overreach — an initial tile-value rule was built by importing test maps into the live
-RiskyLab editor and inferring undocumented icon-set behavior from what rendered, so it
-would happen to parse the interviewer's sample. It was rejected in favor of the simpler,
-literal reading in [Design Decisions](#design-decisions): implement exactly what the task
-document specifies, and treat non-conforming input as an error rather than something to
-be cleverly decoded. Full detail on what was AI-assisted versus author-driven is added
-here as the project progresses.
+every design decision was proposed, discussed, and often revised before being adopted,
+and every code change was reviewed -- and editable -- before being committed. That review
+caught and reversed several planning-phase misconceptions and overreaches that would
+otherwise have cost hours of development time, along with a number of misdirections,
+bugs, and departures from agreed conventions during implementation.
 
 ## Feedback on the Assessment
 
