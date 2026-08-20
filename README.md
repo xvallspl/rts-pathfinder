@@ -39,6 +39,12 @@ The task document requires "C++17 or later"; this project targets **C++23** (`st
 toolchain surfacing an unseen warning can't break the build.
 
 
+## Third-Party Libraries
+
+- **doctest 2.4.11** (MIT) — unit testing. Vendored as a single header in
+  `third_party/doctest/`. Chosen over Catch2/GoogleTest for compile speed and
+  zero-dependency, single-header integration.
+
 ## AI Usage
 
 This project was built with Claude Code as a pair-programming tool, under direct

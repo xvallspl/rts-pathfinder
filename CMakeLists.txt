@@ -27,3 +27,10 @@ endif()
 if(RTS_BUILD_TESTS)
     enable_testing()
 endif()
+
+add_subdirectory(third_party)
+add_subdirectory(core)
+
+if(RTS_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()

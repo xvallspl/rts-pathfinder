@@ -6,6 +6,7 @@ cmake-build-*/
 # IDE / editor state
 .vscode/
 .idea/
+.cache/
 *.swp
 
 # macOS
