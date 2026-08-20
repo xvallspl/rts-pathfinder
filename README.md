@@ -3,10 +3,9 @@
 Software Candidate Assessment take-home project: path-finding for battle units on a
 grid-based battlefield, with a C++23 core and a Qt Quick (QML) user interface.
 
-Status: **work in progress.** This README grows alongside the code — each section below
-is filled in as the corresponding piece is built, not written up front. See
-[Design Decisions](#design-decisions) for a running log of choices and the reasoning
-behind them, kept honest by writing each entry at the moment the decision is made.
+See [Design Decisions](#design-decisions) for a log of the choices made and the
+reasoning behind them — each entry was written at the moment the decision was made,
+not reconstructed afterward.
 
 ## Table of Contents
 
@@ -81,6 +80,17 @@ The task document requires "C++17 or later"; this project targets **C++23**. CI 
 
 `-Wall -Wextra` / `/W4` are enabled but not treated as errors, so a newer reviewer
 toolchain surfacing an unseen warning can't break the build.
+
+### Path-finding: BFS
+
+Every step on the map costs the same, so breadth-first search is a natural fit: it
+explores outward from the start one ring at a time, which guarantees that the first time
+it reaches the target it has found a shortest route. Dead ends need no special handling —
+the "backtracking" the task requires — because the search simply continues from the other
+open branches when one gets stuck (`samples/backtracking_maze.json` demonstrates this).
+A depth-first backtracking search was rejected: it finds *a* path, but not necessarily a
+short one. A* would visit fewer cells along the way, but on a 32×32 map the difference is
+negligible and it needs more machinery; it is the natural upgrade if maps grow much larger.
 
 ### Tile values: exactly the four documented codes, nothing else
 
