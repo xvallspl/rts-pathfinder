@@ -90,6 +90,13 @@ TilemapDocument TilemapDocument::parse(std::string_view jsonText) {
     const auto& data = layer0.at("data");
 
     const Dimensions dims = resolveDimensions(doc);
+    if (dims.rows <= 0 || dims.cols <= 0) {
+      // Guards the size_t cast below: a negative dimension wraps around when
+      // cast to unsigned, which can make an invalid data.size() look correct
+      // (e.g. -2 x -2 wraps to 4, matching a genuine 4-entry array).
+      throw MapError("map dimensions must be positive (got " + std::to_string(dims.rows) +
+                      " x " + std::to_string(dims.cols) + ")");
+    }
     const auto expectedCells =
         static_cast<std::size_t>(dims.rows) * static_cast<std::size_t>(dims.cols);
     if (data.size() != expectedCells) {

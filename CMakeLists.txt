@@ -36,7 +36,7 @@ if(RTS_BUILD_TESTS)
 endif()
 
 if(RTS_BUILD_UI)
-    find_package(Qt6 6.5 QUIET COMPONENTS Core Gui Qml Quick QuickControls2 QuickDialogs2)
+    find_package(Qt6 6.5 QUIET COMPONENTS Core Gui Qml Quick QuickControls2 QuickDialogs2 QuickLayouts)
     if(Qt6_FOUND)
         add_subdirectory(ui)
     else()

@@ -106,6 +106,17 @@ TEST_CASE("resolves dimensions from explicit tileswide/tileshigh when present") 
   CHECK(parsed.battlefield().cols() == 3);
 }
 
+TEST_CASE("throws on negative tileswide/tileshigh instead of wrapping to a bogus size") {
+  // -2 x -2 wraps to size_t 4 when cast unsigned, which would otherwise match
+  // a genuine 4-entry data array and slip past the size check undetected.
+  nlohmann::json doc;
+  doc["tileswide"] = -2;
+  doc["tileshigh"] = -2;
+  doc["layers"] = nlohmann::json::array({{{"name", "world"}, {"data", {0, -1, -1, 8}}}});
+
+  CHECK_THROWS_AS(TilemapDocument::parse(doc.dump()), MapError);
+}
+
 TEST_CASE("throws when map dimensions cannot be determined at all") {
   nlohmann::json doc;
   doc["layers"] = nlohmann::json::array({{{"name", "world"}, {"data", {0, -1, 8}}}});
