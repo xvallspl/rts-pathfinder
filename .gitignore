@@ -1,0 +1,15 @@
+# Build trees
+build/
+build-*/
+cmake-build-*/
+
+# IDE / editor state
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# Per-user CMake configuration
+CMakeUserPresets.json
