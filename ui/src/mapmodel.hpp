@@ -18,6 +18,7 @@ class MapModel : public QAbstractTableModel {
     IsStartRole,
     IsTargetRole,
     IsPathRole,
+    IsUnitRole,
   };
 
   explicit MapModel(QObject* parent = nullptr);
@@ -36,9 +37,13 @@ class MapModel : public QAbstractTableModel {
   void setPath(std::vector<rts::Position> path);
   void clearPath();
 
+  // Where the units are standing at the tick currently being replayed.
+  void setUnitPositions(std::vector<rts::Position> positions);
+
  private:
   const rts::Battlefield* mBattlefield = nullptr;
   std::vector<rts::Position> mStarts;
   std::vector<rts::Position> mTargets;
   std::vector<rts::Position> mPath;
+  std::vector<rts::Position> mUnits;
 };

@@ -1,6 +1,7 @@
 add_executable(rts_tests
     main.cpp
     test_battlefield.cpp
+    test_multi_unit.cpp
     test_pathfinder.cpp
     test_tilemap_json.cpp
 )

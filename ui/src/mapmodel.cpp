@@ -43,6 +43,8 @@ QVariant MapModel::data(const QModelIndex& index, int role) const {
       return contains(mTargets, pos);
     case IsPathRole:
       return contains(mPath, pos);
+    case IsUnitRole:
+      return contains(mUnits, pos);
     default:
       return {};
   }
@@ -54,6 +56,7 @@ QHash<int, QByteArray> MapModel::roleNames() const {
       {IsStartRole, "isStart"},
       {IsTargetRole, "isTarget"},
       {IsPathRole, "isPath"},
+      {IsUnitRole, "isUnit"},
   };
 }
 
@@ -64,6 +67,7 @@ void MapModel::setDocument(const rts::Battlefield& field, std::vector<rts::Posit
   mStarts = std::move(starts);
   mTargets = std::move(targets);
   mPath.clear();
+  mUnits.clear();
   endResetModel();
 }
 
@@ -73,6 +77,7 @@ void MapModel::clear() {
   mStarts.clear();
   mTargets.clear();
   mPath.clear();
+  mUnits.clear();
   endResetModel();
 }
 
@@ -87,4 +92,13 @@ void MapModel::setPath(std::vector<rts::Position> path) {
 
 void MapModel::clearPath() {
   setPath({});
+}
+
+void MapModel::setUnitPositions(std::vector<rts::Position> positions) {
+  mUnits = std::move(positions);
+  if (mBattlefield == nullptr) {
+    return;
+  }
+  emit dataChanged(index(0, 0), index(mBattlefield->rows() - 1, mBattlefield->cols() - 1),
+                   {IsUnitRole});
 }

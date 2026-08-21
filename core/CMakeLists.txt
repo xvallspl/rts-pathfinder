@@ -1,5 +1,6 @@
 add_library(rts_core STATIC
     src/battlefield.cpp
+    src/multi_unit.cpp
     src/pathfinder.cpp
     src/tilemap_json.cpp
 )

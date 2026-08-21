@@ -98,6 +98,46 @@ A depth-first backtracking search was rejected: it finds *a* path, but not neces
 short one. A* would visit fewer cells along the way, but on a 32×32 map the difference is
 negligible and it needs more machinery; it is the natural upgrade if maps grow much larger.
 
+### Multi-unit: a conquer model
+
+The optional extra task asks for several units moving simultaneously. The task document
+describes the situation but not the rules of engagement, so this implementation treats it
+as a conquer game: units claim targets, and the run ends the moment every target is held.
+
+`findPathsBfs` returns one path per unit, all of the same length, with the index being the
+tick — so `paths[u][t]` is where unit `u` stands at tick `t`, and the set together is a
+frame-by-frame recording that the UI replays a second at a time. A cell repeated on
+consecutive ticks means that unit held position.
+
+The rules the task document leaves open, and what was chosen for each:
+
+- **Waiting is a legal move.** Without it a unit could never step aside to let another
+  pass, and on a 4-connected grid a unit forced to move every tick can only ever reach a
+  given cell on ticks of one parity — which makes some otherwise solvable situations
+  impossible.
+- **Two units may swap places.** The document's only stated constraint is that a position
+  holds at most one unit at any moment, and units exchanging cells never share one.
+  Forbidding it would be a rule of my own invention, so it is allowed.
+- **Targets are claimed nearest-first.** One search per target measures the true walking
+  distance — around elevated terrain, not through it — from that target to every unit.
+  The closest (unit, target) pair is claimed, then the next, until every target has an
+  owner. Nothing in the map format says which unit belongs to which target, so an
+  arbitrary pairing would have been indefensible.
+- **Units left over stay home.** With more units than targets, the unclaimed ones hold
+  their starting cell for the whole run and count as obstacles for everyone else.
+- **Arrival is permanent.** A unit that reaches its target stays on it; units planned
+  afterwards route around it.
+- **The input needs at least as many units as targets**, and at least one of each.
+  Anything else is rejected with a message rather than guessed at.
+
+Two limitations are worth stating plainly. Routes are planned one unit at a time against
+the ticks already reserved by the others, which is what keeps the problem tractable —
+planning every unit simultaneously is NP-hard. The price is that an unlucky order can fail
+on a map where some cleverer coordination exists; the program says so rather than
+pretending. For the same reason the claim distances ignore congestion, so "closest" is
+measured on an empty battlefield: a unit that ends up queueing behind another may arrive
+later than its distance suggested.
+
 ### Tile values: exactly the four documented codes, nothing else
 
 The task document defines exactly four values: `-1` ground, `0` start, `8` target, `3`
@@ -240,10 +280,22 @@ A few things I ran into regarding the task definition:
 
 - The QML UI requirement came by email rather than in the task document. Being more of a
   backend person, I kept it as minimal as I could — the objective is to find a path on a
-  valid map, and that is what the UI supports.
+  valid map, and that is what the UI supports. I added a play-by-play replay for the
+  multi-unit extra task and chose to use it for the single-unit case too: one presentation
+  to learn instead of two, at the cost of showing a single path more slowly than simply
+  drawing it at once.
 
 - Platforms weren't specified. I assumed macOS, which I developed on, and Windows, which I
   covered through GitHub CI since I don't have access to a machine.
 
 - Also not specified: I limited Qt and QML usage to modules available under the LGPL.
+
+On the extra task:
+
+- I went slightly over the time budget, but happily.
+- I enjoyed weighing up the different ways it could be solved as stated, and deciding
+  which constraints to add to such an open prompt — see the design decisions for the
+  multi-unit model.
+- Working on the UI in Qt Creator would have been faster and given a better result.
+  Lesson learned.
 
