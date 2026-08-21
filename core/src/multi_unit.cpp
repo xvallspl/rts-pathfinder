@@ -1,6 +1,7 @@
 #include "rts/multi_unit.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <queue>
 #include <tuple>
@@ -220,8 +221,13 @@ std::optional<Path> routeOneUnit(const Battlefield& field, const Reservations& r
     options[4] = current;
 
     for (const Position next : options) {
+      // Must come first: neighbours4 happily returns cells off the edge of
+      // the map, and turning one of those into a state index is undefined.
+      if (!reserved.cellFree(next, nextTick)) {
+        continue;
+      }
       const std::size_t state = stateOf(next, nextTick);
-      if (visited[state] || !reserved.cellFree(next, nextTick)) {
+      if (visited[state]) {
         continue;
       }
       visited[state] = true;
@@ -275,7 +281,8 @@ std::optional<std::vector<Path>> findPathsBfs(const Battlefield& field,
     ticks = std::max(ticks, path.size());
   }
   for (Path& path : paths) {
-    path.resize(ticks, path.back());
+    const Position resting = path.back();
+    path.resize(ticks, resting);
   }
 
   return paths;
