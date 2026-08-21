@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Report every platform's result, rather than cancelling the rest on
+      # the first failure.
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macOS (Apple Clang)
+          - os: windows-latest
+            name: Windows (MSVC)
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The UI needs Qt, which isn't installed here: this job verifies that
+      # the core library and its tests build and pass with no Qt at all,
+      # which is also what a reviewer without Qt would get.
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DRTS_BUILD_UI=OFF
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Test
+        run: ctest --test-dir build --build-config Release --output-on-failure
