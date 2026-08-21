@@ -33,19 +33,19 @@ rts-pathfinder/
 │   │   ├── pathfinder.hpp   # findPathBfs()
 │   │   └── tilemap_json.hpp # TilemapDocument (RiskyLab JSON parsing), MapError
 │   └── src/                 # implementations
-├── ui/                      # Qt Quick (QML) application -- the sole interaction surface
+├── ui/                      # Qt Quick (QML) application — the sole interaction surface
 │   ├── src/                 # MapModel, SolverController (the C++/QML bridge)
 │   └── qml/Main.qml
 ├── tests/                   # doctest, one file per core module
 ├── third_party/             # vendored: nlohmann/json, doctest
-└── samples/                 # four sample maps -- see Sample Runs
+└── samples/                 # four sample maps — see Sample Runs
 ```
 
 ## Build Instructions
 
 Prerequisites: CMake ≥ 3.21 and a C++23 compiler (built with Apple Clang 17). Qt 6.5+
 (Core, Gui, Qml, Quick, QuickControls2, QuickDialogs2, QuickLayouts) is needed for the UI
-only -- the core library and tests build and run with no Qt installed at all.
+only — the core library and tests build and run with no Qt installed at all.
 
 **Core + tests only:**
 
@@ -63,7 +63,7 @@ cmake --build build
 ./build/ui/rts_ui
 ```
 
-`<path-to-qt>` is the Qt installation root -- on macOS, e.g. `/opt/homebrew/opt/qt`
+`<path-to-qt>` is the Qt installation root — on macOS, e.g. `/opt/homebrew/opt/qt`
 (Homebrew) or `~/Qt/6.x.x/macos` (official installer). If Qt can't be found, the build
 prints a status message and continues without the `ui` target rather than failing.
 
@@ -79,7 +79,8 @@ change before committing it.
 
 ### C++23, not C++17
 
-The task document requires "C++17 or later"; this project targets **C++23**. CI is pinned to toolchains recent enough to support it.
+The task document requires "C++17 or later"; this project targets **C++23**. CI is pinned
+to toolchains recent enough to support it.
 
 ### Compiler warnings: on, not fatal
 
@@ -129,10 +130,9 @@ would make our own start/target invisible if used as-is.
 
 - **nlohmann/json 3.11.3** (MIT) — JSON parsing for the RiskyLab tilemap format.
   Vendored as a single header in `third_party/nlohmann/`. A hand-rolled parser was
-  considered, since our schema needs are narrow; rejected because JSON's grammar
-  (escaping, number formats) is easy to get subtly wrong, and export must preserve
-  unknown fields (tileset name, image path, ...) byte-faithfully for the file to stay
-  RiskyLab-compatible.
+  considered, since only a few fields are actually read; rejected because JSON's grammar
+  (string escaping, number formats) is easy to get subtly wrong, and skipping correctly
+  past the parts we don't care about still requires parsing them correctly.
 - **doctest 2.4.11** (MIT) — unit testing. Vendored as a single header in
   `third_party/doctest/`. Chosen over Catch2/GoogleTest for compile speed and
   zero-dependency, single-header integration.
@@ -174,7 +174,7 @@ negative test rather than something the parser is bent to accept.
 ### `samples/no_path_map.json` — no path exists
 
 5×5, start `(0,0)`, target `(4,4)`, with a solid elevated wall down column 2 fully
-separating them -- valid input, but algorithmically unsolvable. `findPathBfs` returns
+separating them — valid input, but algorithmically unsolvable. `findPathBfs` returns
 `std::nullopt`, and the UI reports "No path exists between start and target" rather than
 showing a stale or empty grid.
 
@@ -191,7 +191,7 @@ wall directly blocks the straight route:
 (0,0) -> (0,1) -> (1,1) -> (2,1) -> (2,2) -> (2,3) -> (1,3) -> (0,3)
 ```
 
-7 steps (8 positions) -- BFS's frontier detours around the wall via row 2 without any
+7 steps (8 positions) — BFS's frontier detours around the wall via row 2 without any
 explicit backtracking logic, which is what the task document's "must be capable of
 backtracking" requirement is checking for. Small enough to visually verify the path is
 genuinely shortest at a glance, unlike the 32×32 case above.
@@ -202,11 +202,48 @@ genuinely shortest at a glance, unlike the 32×32 case above.
 
 This project was built with Claude Code as a pair-programmer, under direct supervision:
 every design decision was proposed, discussed, and often revised before being adopted,
-and every code change was reviewed -- and editable -- before being committed. That review
+and every code change was reviewed — and editable — before being committed. That review
 caught and reversed several planning-phase misconceptions and overreaches that would
 otherwise have cost hours of development time, along with a number of misdirections,
 bugs, and departures from agreed conventions during implementation.
 
+The AI also structured and drafted parts of this document, and completed and reworded some
+of my own text.
+
 ## Feedback on the Assessment
 
-*(added at the end, per the task document's feedback section)*
+My first consideration was the time budget. I had read the project description and
+experimented with the tilemap format a few days in advance, so I had already settled on an
+algorithm and a rough shape for the project before starting work or involving the AI.
+
+I ran into problems with the state of my existing setup: an old Qt installation that links
+against a macOS graphics framework the current SDK no longer ships, which took some
+debugging and an upgrade to resolve. I also couldn't work in one long focused block — it
+was more a series of shorter, per-commit sessions. As far as I can tell the total was
+within the suggested budget, though on the high side. Most of that time went to discussing
+and correcting the AI's execution plans, steering it, and reviewing its code.
+
+It was an enjoyable task, and I could easily have spent longer refining it — I can see how
+it would be easy to get lost in it.
+
+A few things I ran into regarding the task definition:
+
+- The sample map doesn't follow the format the task specifies: it contains `0.5` and `8.1`.
+  Importing it by hand did render something close to what the description implies, but I
+  chose to stick to the documented format — even though a conforming map draws nothing for
+  the unit and the target in that tileset.
+
+- I couldn't find a source repository for the tilemap editor (the link is a 404), so I
+  couldn't determine the license covering its assets. I had planned to map the woodland
+  sprites onto our format, but decided against it: I couldn't confirm I was allowed to
+  reuse them, and it was an extra rather than a requirement.
+
+- The QML UI requirement came by email rather than in the task document. Being more of a
+  backend person, I kept it as minimal as I could — the objective is to find a path on a
+  valid map, and that is what the UI supports.
+
+- Platforms weren't specified. I assumed macOS, which I developed on, and Windows, which I
+  covered through GitHub CI since I don't have access to a machine.
+
+- Also not specified: I limited Qt and QML usage to modules available under the LGPL.
+
