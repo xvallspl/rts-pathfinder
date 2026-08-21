@@ -1,7 +1,12 @@
 # RTS Battle Unit Path-Finding
 
+[![CI](https://github.com/xvallspl/rts-pathfinder/actions/workflows/ci.yml/badge.svg)](https://github.com/xvallspl/rts-pathfinder/actions/workflows/ci.yml)
+
 Software Candidate Assessment take-home project: path-finding for battle units on a
 grid-based battlefield, with a C++23 core and a Qt Quick (QML) user interface.
+
+The badge covers the core library and its test suite on macOS (Apple Clang) and Windows
+(MSVC), built without Qt — the UI is verified locally (see [Sample Runs](#sample-runs)).
 
 See [Design Decisions](#design-decisions) for a log of the choices made and the
 reasoning behind them — each entry was written at the moment the decision was made,
