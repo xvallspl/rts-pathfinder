@@ -4,6 +4,8 @@
 #include <optional>
 #include <utility>
 
+#include "nlohmann/json.hpp"
+
 namespace rts {
 
 namespace {
@@ -69,10 +71,9 @@ std::string describePosition(Position pos) {
 
 }  // namespace
 
-TilemapDocument::TilemapDocument(nlohmann::json raw, Battlefield battlefield,
-                                  std::vector<Position> starts, std::vector<Position> targets)
-    : mRaw(std::move(raw)),
-      mBattlefield(std::move(battlefield)),
+TilemapDocument::TilemapDocument(Battlefield battlefield, std::vector<Position> starts,
+                                  std::vector<Position> targets)
+    : mBattlefield(std::move(battlefield)),
       mStarts(std::move(starts)),
       mTargets(std::move(targets)) {}
 
@@ -150,8 +151,7 @@ TilemapDocument TilemapDocument::parse(std::string_view jsonText) {
     }
 
     Battlefield battlefield(dims.rows, dims.cols, std::move(cells));
-    return TilemapDocument(std::move(doc), std::move(battlefield), std::move(starts),
-                            std::move(targets));
+    return TilemapDocument(std::move(battlefield), std::move(starts), std::move(targets));
 
   } catch (const MapError&) {
     throw;  // already ours
@@ -159,7 +159,5 @@ TilemapDocument TilemapDocument::parse(std::string_view jsonText) {
     throw MapError(std::string("invalid tilemap JSON: ") + e.what());
   }
 }
-
-std::string TilemapDocument::toJson() const { return mRaw.dump(); }
 
 }  // namespace rts

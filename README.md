@@ -31,7 +31,7 @@ rts-pathfinder/
 │   ├── include/rts/
 │   │   ├── battlefield.hpp  # Position, Terrain, Battlefield grid, neighbors4()
 │   │   ├── pathfinder.hpp   # findPathBfs()
-│   │   └── tilemap_json.hpp # TilemapDocument (RiskyLab JSON parse/export), MapError
+│   │   └── tilemap_json.hpp # TilemapDocument (RiskyLab JSON parsing), MapError
 │   └── src/                 # implementations
 ├── ui/                      # Qt Quick (QML) application -- the sole interaction surface
 │   ├── src/                 # MapModel, SolverController (the C++/QML bridge)

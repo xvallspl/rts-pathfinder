@@ -69,15 +69,6 @@ TEST_CASE("a fractional value is rejected -- codes are integers, period") {
   checkRejected(makeMapJson(1, 2, {0, 8.5}), "(0,1)");
 }
 
-TEST_CASE("a parsed document round-trips through toJson unchanged") {
-  const auto original = TilemapDocument::parse(makeMapJson(2, 2, {0, 3, -1, 8}));
-  const auto reparsed = TilemapDocument::parse(original.toJson());
-
-  CHECK(reparsed.starts() == original.starts());
-  CHECK(reparsed.targets() == original.targets());
-  CHECK(nlohmann::json::parse(reparsed.toJson()) == nlohmann::json::parse(original.toJson()));
-}
-
 TEST_CASE("throws when the map has no starting position") {
   CHECK_THROWS_AS(TilemapDocument::parse(makeMapJson(1, 2, {-1, 8})), MapError);
 }

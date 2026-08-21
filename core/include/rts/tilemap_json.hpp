@@ -5,7 +5,6 @@
 #include <string_view>
 #include <vector>
 
-#include "nlohmann/json.hpp"
 #include "rts/battlefield.hpp"
 
 namespace rts {
@@ -36,15 +35,10 @@ class TilemapDocument {
   const std::vector<Position>& starts() const { return mStarts; }
   const std::vector<Position>& targets() const { return mTargets; }
 
-  // Re-serializes the parsed document. Parsing does not mutate the raw
-  // document, so this is byte-equivalent (modulo JSON formatting) to the input.
-  std::string toJson() const;
-
  private:
-  TilemapDocument(nlohmann::json raw, Battlefield battlefield, std::vector<Position> starts,
+  TilemapDocument(Battlefield battlefield, std::vector<Position> starts,
                    std::vector<Position> targets);
 
-  nlohmann::json mRaw;
   Battlefield mBattlefield;
   std::vector<Position> mStarts;
   std::vector<Position> mTargets;

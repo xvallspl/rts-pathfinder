@@ -6,6 +6,6 @@ add_library(rts_core STATIC
 
 target_include_directories(rts_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# PUBLIC: tilemap_json.hpp includes nlohmann/json.hpp, so anything linking
-# rts_core needs its include path too.
-target_link_libraries(rts_core PUBLIC nlohmann_json)
+# PRIVATE: JSON is an implementation detail of the parser -- it appears in
+# no public header, so consumers of rts_core don't need its include path.
+target_link_libraries(rts_core PRIVATE nlohmann_json)
