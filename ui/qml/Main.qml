@@ -139,10 +139,12 @@ ApplicationWindow {
 
                 // Visible only when the grid overflows the viewport.
                 ScrollBar.vertical: ScrollBar {
-                    contentItem: StyledScrollHandle {}
+                    id: gridScrollY
+                    contentItem: StyledScrollHandle { visible: gridScrollY.size < 1.0 }
                 }
                 ScrollBar.horizontal: ScrollBar {
-                    contentItem: StyledScrollHandle {}
+                    id: gridScrollX
+                    contentItem: StyledScrollHandle { visible: gridScrollX.size < 1.0 }
                 }
 
                 delegate: Rectangle {
@@ -169,8 +171,9 @@ ApplicationWindow {
             // scrolls vertically instead of running off the right edge.
             contentWidth: availableWidth
             ScrollBar.vertical: ScrollBar {
+                id: pathScrollY
                 policy: ScrollBar.AsNeeded
-                contentItem: StyledScrollHandle {}
+                contentItem: StyledScrollHandle { visible: pathScrollY.size < 1.0 }
             }
 
             Label {

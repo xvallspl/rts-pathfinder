@@ -38,7 +38,7 @@ rts-pathfinder/
 │   └── qml/Main.qml
 ├── tests/                   # doctest, one file per core module
 ├── third_party/             # vendored: nlohmann/json, doctest
-└── samples/                 # four sample maps — see Sample Runs
+└── samples/                 # five sample maps — see Sample Runs
 ```
 
 ## Build Instructions
@@ -237,6 +237,27 @@ backtracking" requirement is checking for. Small enough to visually verify the p
 genuinely shortest at a glance, unlike the 32×32 case above.
 
 ![backtracking_maze.json solved](samples/screenshots/backtracking_maze_solved.png)
+
+### `samples/multi_unit_map.json` — three units, three targets
+
+10×10, split by a wall whose only gap is at `(5,5)`. Three units start along the top edge
+and three targets sit along the bottom, so every unit has to pass through that one cell —
+they queue for it rather than colliding. Claimed nearest-first, routed in 17 ticks:
+
+```
+Unit 1: (0,1) → (0,2) → (0,3) → (0,4) → (0,5) → (1,5) → (2,5) → (3,5) → (4,5) → (5,5) →
+        (6,5) → (7,5) → (8,5) → (8,4) → (9,4) → (9,3) → (9,2) → (9,1)
+Unit 2: (0,5) → (1,5) → (2,5) → (3,5) → (4,5) → (5,5) → (6,5) → (7,5) → (8,5) → (9,5) →
+        (9,5) → (9,5) → (9,5) → (9,5) → (9,5) → (9,5) → (9,5) → (9,5)
+Unit 3: (0,8) → (1,8) → (2,8) → (3,8) → (4,8) → (4,7) → (4,6) → (4,5) → (5,5) → (6,5) →
+        (6,6) → (6,7) → (6,8) → (7,8) → (8,8) → (9,8) → (9,8) → (9,8)
+```
+
+Unit 2 is nearest to the gap, takes it first and settles on `(9,5)` at tick 9 — the
+repeated cell after that is it holding position while the others finish. Units 3 and 1
+follow through the same cell on the next two ticks and fan out to the remaining targets.
+
+![multi_unit_map.json solved](samples/screenshots/multi_unit_map_solved.png)
 
 ## AI Usage
 
